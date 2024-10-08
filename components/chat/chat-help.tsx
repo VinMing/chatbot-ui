@@ -32,7 +32,7 @@ export const ChatHelp: FC<ChatHelpProps> = ({}) => {
 
       <DropdownMenuContent align="end">
         <DropdownMenuLabel className="flex items-center justify-between">
-          <div className="flex space-x-2">
+          {/* <div className="flex space-x-2">
             <Link
               className="cursor-pointer hover:opacity-50"
               href="https://twitter.com/ChatbotUI"
@@ -50,19 +50,19 @@ export const ChatHelp: FC<ChatHelpProps> = ({}) => {
             >
               <IconBrandGithub />
             </Link>
-          </div>
+          </div> */}
 
           <div className="flex space-x-2">
             <Announcements />
 
-            <Link
+            {/* <Link
               className="cursor-pointer hover:opacity-50"
               href="/help"
               target="_blank"
               rel="noopener noreferrer"
             >
               <IconHelpCircle size={24} />
-            </Link>
+            </Link> */}
           </div>
         </DropdownMenuLabel>
 
