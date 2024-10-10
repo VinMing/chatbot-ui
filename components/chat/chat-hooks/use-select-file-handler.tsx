@@ -4,7 +4,14 @@ import { LLM_LIST } from "@/lib/models/llm/llm-list"
 import mammoth from "mammoth"
 import { useContext, useEffect, useState } from "react"
 import { toast } from "sonner"
-
+import * as chardet from "chardet"
+import * as iconv from "iconv-lite"
+export const TO_UTF8_FILE_TYPES = [
+  "text/csv",
+  "application/json",
+  "text/markdown",
+  "text/plain"
+].join(",")
 export const ACCEPTED_FILE_TYPES = [
   "text/csv",
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
@@ -44,6 +51,15 @@ export const useSelectFileHandler = () => {
         : ACCEPTED_FILE_TYPES
     )
   }
+  // Helper function to read the file as an ArrayBuffer
+  const readFileAsArrayBuffer = (file: File): Promise<ArrayBuffer> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as ArrayBuffer)
+      reader.onerror = reject
+      reader.readAsArrayBuffer(file)
+    })
+  }
 
   const handleSelectDeviceFile = async (file: File) => {
     if (!profile || !selectedWorkspace || !chatSettings) return
@@ -52,6 +68,37 @@ export const useSelectFileHandler = () => {
     setUseRetrieval(true)
 
     if (file) {
+      // // 将文件格式转换成utf-8
+      if (TO_UTF8_FILE_TYPES.split(",").includes(file.type)) {
+        // Read the file as an ArrayBuffer using FileReader
+        const arrayBuffer = await readFileAsArrayBuffer(file)
+        const fileBuffer = Buffer.from(arrayBuffer)
+
+        // Detect the encoding of the file
+        const detectedEncoding = chardet.detect(fileBuffer)
+
+        if (!detectedEncoding) {
+          throw new Error("Unable to detect file encoding")
+        }
+
+        // console.log(`Detected encoding: ${detectedEncoding}`);
+
+        // Decode the buffer into a string using the detected encoding
+        const decodedContent = iconv.decode(fileBuffer, detectedEncoding)
+
+        // Encode the string into a buffer using UTF-8
+        const utf8Buffer = iconv.encode(decodedContent, "utf-8")
+
+        // Create a new Blob with the UTF-8 encoded content
+        const utf8Blob = new Blob([utf8Buffer], { type: file.type })
+
+        // Create a new File object with the same name and UTF-8 encoded content
+        const utf8File = new File([utf8Blob], file.name, { type: file.type })
+
+        // console.log('Converted file:', utf8File);
+        file = utf8File
+      }
+
       let simplifiedFileType = file.type.split("/")[1]
 
       let reader = new FileReader()
